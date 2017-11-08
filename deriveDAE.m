@@ -1,4 +1,5 @@
 clear variables
+fprintf('Setting up system...')
 syms x(t) y(t) theta(t)			% State Variables of the Cylinder
 syms R M I d gamma g mu real	% Relevant Parameters
 syms Fn Ft real					% Contact Forces
@@ -38,8 +39,9 @@ c1 = diff(c1);
 c2 = diff(CrelO) == -R*diff(theta)*et; % No Slip
 c2 = diff(c2);
 
+fprintf('done\n')
 %% Derive EOM for Rolling
-
+fprintf('Finding Rolling EOM...')
 % Replace diff terms with variables
 EOM = [ih'*LMB; jh'*LMB; kh'*AMB; c1; c2];
 [newEq, newVar] = reduceOrder(EOM, {x, y, theta});
@@ -50,9 +52,10 @@ ddState = [newVar(:,3); Fn; Ft];
 A = simplify(A); b = simplify(b);
 
 matlabFunction(A, b, 'File', 'eom_rolling');
+fprintf('done\n')
 
 %% Derive EOM for Ballistic
-
+fprintf('Finding Ballistic EOM...')
 % LMB and AMB for when ballistic
 LMB = M*diff(GrelO,2) == -M*g*jh;
 AMB = 0 == I*diff(theta,2)*kh;
@@ -68,8 +71,21 @@ ddState = newVar(:,3);
 A = simplify(A); b = simplify(b);
 
 matlabFunction(A, b, 'File', 'eom_ballistic');
+fprintf('done\n')
+%% Compute IC from Wo
+fprintf('Finding IC given initial omega...')
+% Cylinder starts with the contact point at the origin with an initial
+% angular velocity w0
+C0 = -IrelC;
+v0 = -R*diff(theta)*et;
+z0 = [ih'*C0; jh'*C0; theta; ih'*v0; jh'*v0; diff(theta)];
+
+z0 = reduceOrder(z0, {x,y,theta});
+matlabFunction(z0, 'File', 'computeIC');
+fprintf('done\n')
 
 %% Conservation of Energy
+fprintf('Finding system energy...')
 v2 = sum(diff(GrelO).^2); 
 Ek = 0.5*(M*v2 + I*diff(theta)^2);
 Ep = M*g*(jh'*GrelO);
@@ -78,8 +94,10 @@ Ek = reduceOrder(Ek, {x,y,theta});
 Ep = reduceOrder(Ep, {x,y,theta});
 
 matlabFunction(Ek, Ep, 'File', 'energy_con');
+fprintf('done\n')
 
 %% Constraint Violations
+fprintf('Checking constraint violations...')
 c1 = en'*diff(CrelO);					% No Penetration
 c2 = et'*diff(CrelO) + R*diff(theta);	% No Slip
 
@@ -87,3 +105,4 @@ c1 = reduceOrder(c1, {x,y,theta});
 c2 = reduceOrder(c2, {x,y,theta});
 
 matlabFunction(c1, c2, 'File', 'constraint_violations');
+fprintf('done\n')
