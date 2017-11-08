@@ -1,0 +1,8 @@
+# Latex Files
+*.log
+*.synctex.gz
+*.aux
+*.out
+
+# Sublime Files
+*.sublime-*
