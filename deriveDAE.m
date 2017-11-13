@@ -33,17 +33,14 @@ LMB = M*diff(GrelO,2) == -M*g*jh + F;
 AMB = cross(IrelG, F) == I*diff(theta,2)*kh;
 
 %% Rolling Constraints
-c1 = en'*diff(CrelO) == 0; % No Penetration
+c1 = diff(CrelO) == -R*diff(theta)*et; % No Slip
 c1 = diff(c1);
-
-c2 = diff(CrelO) == -R*diff(theta)*et; % No Slip
-c2 = diff(c2);
 
 fprintf('done\n')
 %% Derive EOM for Rolling
 fprintf('Finding Rolling EOM...')
 % Replace diff terms with variables
-EOM = [ih'*LMB; jh'*LMB; kh'*AMB; c1; c2];
+EOM = [ih'*LMB; jh'*LMB; kh'*AMB; ih'*c1; jh'*c1];
 [newEq, newVar] = reduceOrder(EOM, {x, y, theta});
 
 % Solve for accelerations and constraint forces

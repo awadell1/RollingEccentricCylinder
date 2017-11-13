@@ -12,26 +12,36 @@ default = p;
 
 %% Simulate Base Case
 [sim1, t, z] = simulate(p);
+fprintf('Time to jump: %f\n', sim1.tlift);
 
 %% Check for Energy Conservation
-[Ek,Ep] = energy_con(sim1.dx, sim1.dy, sim1.dtheta, p.I, p.M, p.d, p.g, sim1.theta, sim1.y);
+[Ek,Ep] = energy_con(sim1.dx, sim1.dy,
+	sim1.dtheta, p.I, p.M, p.d, p.g,
+	sim1.theta, sim1.y);
+
 figure; box on; hold on;
-plot(sim1.t, Ek, 'LineWidth', 2)
-plot(sim1.t, Ep, 'LineWidth', 2)
-plot(sim1.t, Ek+Ep, 'LineWidth', 2)
+plot(sim1.t, Ek,'-', 'LineWidth', 2)
+plot(sim1.t, Ep,'-.', 'LineWidth', 2)
+plot(sim1.t, Ek+Ep,':', 'LineWidth', 2)
 legend('E_k', 'E_p', 'E_t', 'Location', 'northwest');
 xlabel('Time'); ylabel('Energy');
 axis tight
+saveas(gcf, 'img\energy_con', 'png')
 
 %% Check for Constraint Violations
-[c1,c2] = constraint_violations(sim1.dx, sim1.dy, sim1.dtheta, p.R, p.gamma);
+[c1,c2] = constraint_violations(sim1.dx,
+	sim1.dy, sim1.dtheta, p.R, p.gamma);
 figure; box on; hold on;
-plot(sim1.t, c1, 'LineWidth', 2)
-plot(sim1.t, c2, 'LineWidth', 2)
+plot(sim1.t, c1, '-', 'LineWidth', 2)
+plot(sim1.t, c2, '-.', 'LineWidth', 2)
 plot([sim1.tlift,sim1.tlift], [min([c1;c2]), max([c1;c2])], 'r-');
-legend('No Penetration', 'No Slip', 'Lift Off', 'Location', 'northwest')
+legend('Velocity Normal to the Ramp',...
+	   'Velocity Parallel to the Ramp',
+	   'Lift Off',
+	   'Location', 'northwest')
 xlabel('Time'); ylabel('Velocity')
 axis tight
+saveas(gcf, 'img\constraint_check', 'png')
 
 %% Compute Constraint Force
 if ~isnan(sim1.tlift)
@@ -55,12 +65,16 @@ plot(sim1.t, sim1.Ft, 'LineWidth', 2)
 legend('Normal Force', 'Friction Force', 'Location', 'northwest')
 xlabel('Time'); ylabel('Force')
 axis tight
+xlim([0,sim1.tlift])
+saveas(gcf, 'img\constaint_force', 'png')
 
 figure; box on; hold on;
 plot(sim1.t, sim1.mu, 'LineWidth', 2)
 xlabel('Time'); ylabel('Friction Coefficent')
 grid on;
-axis tight; ylim([0,1.5])
+axis tight; ylim([0,1])
+saveas(gcf, 'img\friction_mu', 'png')
 
 %% Animate
 animate(t,z,sim1,p);
+saveas(gcf, 'img\animate', 'png')
